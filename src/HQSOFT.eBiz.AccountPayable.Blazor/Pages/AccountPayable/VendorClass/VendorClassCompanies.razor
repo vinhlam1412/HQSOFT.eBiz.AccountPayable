@@ -1,0 +1,238 @@
+@page "/AccountPayable/VendorClassCompanies"
+
+
+
+@attribute [Authorize(AccountPayablePermissions.VendorClassCompanies.Default)]
+@using global::HQSOFT.eBiz.AccountPayable.VendorClassCompanies
+@using global::HQSOFT.eBiz.AccountPayable.Localization
+@using global::HQSOFT.eBiz.AccountPayable.Shared
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.Extensions.Localization
+@using Microsoft.AspNetCore.Components.Web
+@using Blazorise
+@using Blazorise.Components
+@using Blazorise.DataGrid
+@using Volo.Abp.BlazoriseUI
+@using Volo.Abp.BlazoriseUI.Components
+@using Volo.Abp.ObjectMapping
+@using Volo.Abp.AspNetCore.Components.Messages
+@using Volo.Abp.AspNetCore.Components.Web.Theming.Layout
+@using global::HQSOFT.eBiz.AccountPayable.Permissions
+@using Microsoft.AspNetCore.Components
+@using Volo.Abp.AspNetCore.Components.Web
+@using Volo.Abp.Http.Client
+@inherits AccountPayableComponentBase
+@inject IVendorClassCompaniesAppService VendorClassCompaniesAppService
+@inject IUiMessageService UiMessageService
+@inject IRemoteServiceConfigurationProvider RemoteServiceConfigurationProvider
+@inject NavigationManager NavigationManager
+
+@* ************************* PAGE HEADER ************************* *@
+<PageHeader Title="@L["VendorClassCompanies"]" BreadcrumbItems="BreadcrumbItems" Toolbar="Toolbar">
+
+</PageHeader>
+
+@* ************************* SEARCH ************************* *@
+<Card>
+    <CardBody>
+        <Form id="VendorClassCompanySearchForm" class="mb-3">
+            <Addons>
+                <Addon AddonType="AddonType.Body">
+                    <TextEdit @bind-Text="@Filter.FilterText"
+                              Autofocus="true"
+                              Placeholder="@L["Search"]">
+                    </TextEdit>
+                </Addon>
+                <Addon AddonType="AddonType.End">
+                    <SubmitButton Form="VendorClassCompanySearchForm" Clicked="GetVendorClassCompaniesAsync">
+                        <Icon Name="IconName.Search" Class="me-1"></Icon>@L["Search"]
+                    </SubmitButton>
+                </Addon>
+            </Addons>
+        </Form>
+    </CardBody>
+</Card>
+
+@* ************************* DATA GRID ************************* *@
+<Card>
+    <CardBody>
+        <DataGrid TItem="VendorClassCompanyWithNavigationPropertiesDto"
+                  Data="VendorClassCompanyList"
+                  ReadData="OnDataGridReadAsync"
+                  TotalItems="TotalCount"
+                  ShowPager="true"
+                  Responsive="true"
+                  PageSize="PageSize">
+            <DataGridColumns>
+                <DataGridEntityActionsColumn TItem="VendorClassCompanyWithNavigationPropertiesDto" @ref="@EntityActionsColumn">
+                    <DisplayTemplate>
+                        <EntityActions TItem="VendorClassCompanyWithNavigationPropertiesDto" EntityActionsColumn="@EntityActionsColumn">
+                            <EntityAction TItem="VendorClassCompanyWithNavigationPropertiesDto"
+                                          Visible="@CanEditVendorClassCompany"
+                                          Clicked="async () => await OpenEditVendorClassCompanyModalAsync(context)"
+                                          Text="@L["Edit"]"></EntityAction>
+                            <EntityAction TItem="VendorClassCompanyWithNavigationPropertiesDto"
+                                          Visible="@CanDeleteVendorClassCompany"
+                                          Clicked="() => DeleteVendorClassCompanyAsync(context)"
+                                          ConfirmationMessage="@(()=> L["DeleteConfirmationMessage"])"
+                                          Text="@L["Delete"]"></EntityAction>
+                        </EntityActions>
+                    </DisplayTemplate>
+                </DataGridEntityActionsColumn>
+               
+
+
+              <DataGridColumn TItem="VendorClassCompanyWithNavigationPropertiesDto"
+                      Field="VendorClassCompany.Exclude"
+                      Caption="@L["Exclude"]">
+                    <DisplayTemplate>
+                        @if (context.VendorClassCompany.Exclude)
+                        {
+                            <Icon TextColor="TextColor.Success" Name="@IconName.Check" />
+                        }
+                        else
+                        {
+                            <Icon TextColor="TextColor.Danger" Name="@IconName.Times" />
+                        }
+                    </DisplayTemplate>
+              </DataGridColumn>
+
+
+              <DataGridColumn TItem="VendorClassCompanyWithNavigationPropertiesDto"
+                      Field="VendorClassCompany.Idx"
+                      Caption="@L["Idx"]">
+              </DataGridColumn>
+
+              <DataGridColumn TItem="VendorClassCompanyWithNavigationPropertiesDto"
+                      Field="VendorClass.VendorClassCode"
+                      Caption="@L["VendorClass"]">
+              </DataGridColumn>
+
+            </DataGridColumns>
+        </DataGrid>
+    </CardBody>
+</Card>
+
+@* ************************* CREATE MODAL ************************* *@
+<Modal @ref="CreateVendorClassCompanyModal" Closing="@CreateVendorClassCompanyModal.CancelClosingModalWhenFocusLost">
+    <ModalContent Centered="true">
+        <Form id="CreateVendorClassCompanyForm">
+            <ModalHeader>
+                <ModalTitle>@L["NewVendorClassCompany"]</ModalTitle>
+                <CloseButton Clicked="CloseCreateVendorClassCompanyModalAsync" />
+            </ModalHeader>
+            <ModalBody>
+                <Validations @ref="@NewVendorClassCompanyValidations"
+                            Mode="ValidationMode.Auto"
+                            Model="@NewVendorClassCompany"
+                            ValidateOnLoad="false">
+                     
+                    
+
+
+                    <Field>
+                        <Check TValue="bool" @bind-Checked="@NewVendorClassCompany.Exclude" >@L["Exclude"]</Check>
+                    </Field>
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["Idx"]</FieldLabel>
+                            <NumericPicker TValue="int" @bind-Value="@NewVendorClassCompany.Idx"  Decimals="0" >
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                             </NumericPicker>
+                        </Field>
+                     </Validation>
+
+
+                    <Field>
+                        <FieldLabel>@L["VendorClass"]</FieldLabel>
+                        <Select TValue="Guid?" @bind-SelectedValue="@NewVendorClassCompany.VendorClassId">
+                            <SelectItem TValue="Guid?" Value="null"></SelectItem>
+                            @foreach (var vendorClass in VendorClassesCollection)
+                            {
+                                <SelectItem TValue="Guid?" Value="@vendorClass.Id">
+                                    @vendorClass.DisplayName
+                                </SelectItem>
+                            }
+                        </Select>
+                    </Field>
+
+
+                    
+                    
+                </Validations>
+            </ModalBody>
+            <ModalFooter>
+                <Button Color="Color.Secondary"
+                        Clicked="CloseCreateVendorClassCompanyModalAsync">
+                    @L["Cancel"]
+                </Button>
+                <SubmitButton Form="CreateVendorClassCompanyForm" Clicked="CreateVendorClassCompanyAsync" />
+            </ModalFooter>
+        </Form>
+    </ModalContent>
+</Modal>
+
+@* ************************* EDIT MODAL ************************* *@
+<Modal @ref="EditVendorClassCompanyModal" Closing="@EditVendorClassCompanyModal.CancelClosingModalWhenFocusLost">
+    <ModalContent Centered="true">
+        <Form id="EditVendorClassCompanyForm">
+            <ModalHeader>
+                <ModalTitle>@L["Update"]</ModalTitle>
+                <CloseButton Clicked="CloseEditVendorClassCompanyModalAsync" />
+            </ModalHeader>
+            <ModalBody>
+                <Validations @ref="@EditingVendorClassCompanyValidations"
+                            Mode="ValidationMode.Auto"
+                            Model="@EditingVendorClassCompany"
+                            ValidateOnLoad="false">
+                     
+                    
+
+
+                    <Field>
+                        <Check TValue="bool" @bind-Checked="@EditingVendorClassCompany.Exclude" >@L["Exclude"]</Check>
+                    </Field>
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["Idx"]</FieldLabel>
+                            <NumericPicker TValue="int" @bind-Value="@EditingVendorClassCompany.Idx"  Decimals="0" >
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                             </NumericPicker>
+                        </Field>
+                     </Validation>
+
+
+                    <Field>
+                        <FieldLabel>@L["VendorClass"]</FieldLabel>
+                        <Select TValue="Guid?" @bind-SelectedValue="@EditingVendorClassCompany.VendorClassId">
+                            <SelectItem TValue="Guid?" Value="null"></SelectItem>
+                            @foreach (var vendorClass in VendorClassesCollection)
+                            {
+                                <SelectItem TValue="Guid?" Value="@vendorClass.Id">
+                                    @vendorClass.DisplayName
+                                </SelectItem>
+                            }
+                        </Select>
+                    </Field>
+
+
+                    
+                    
+                </Validations>
+            </ModalBody>
+            <ModalFooter>
+                <Button Color="Color.Secondary"
+                        Clicked="CloseEditVendorClassCompanyModalAsync">
+                    @L["Cancel"]
+                </Button>
+                <SubmitButton Form="CreateVendorClassCompanyForm" Clicked="UpdateVendorClassCompanyAsync" />
+            </ModalFooter>
+        </Form>
+    </ModalContent>
+</Modal>

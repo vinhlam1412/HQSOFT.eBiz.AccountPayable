@@ -1,0 +1,25 @@
+version: '3.4'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server
+    volumes:
+      - dbdata:/var/opt/mssql
+  
+  auth-server:
+    build:
+      context: ../../
+      dockerfile: templates/service/host/AuthServerHost/Dockerfile
+    depends_on:
+      - sqlserver      
+  
+  account-payable:
+    build:
+      context: ../../
+      dockerfile: templates/service/host/HQSOFT.eBiz.AccountPayable.Host/Dockerfile
+    depends_on:
+      - sqlserver
+      - auth-server
+
+volumes:
+  dbdata:

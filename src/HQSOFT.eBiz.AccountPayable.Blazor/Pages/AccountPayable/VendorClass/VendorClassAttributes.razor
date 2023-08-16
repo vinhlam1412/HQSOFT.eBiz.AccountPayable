@@ -1,0 +1,396 @@
+@page "/AccountPayable/VendorClassAttributes"
+
+
+
+@attribute [Authorize(AccountPayablePermissions.VendorClassAttributes.Default)]
+@using global::HQSOFT.eBiz.AccountPayable.VendorClassAttributes
+@using global::HQSOFT.eBiz.AccountPayable.Localization
+@using global::HQSOFT.eBiz.AccountPayable.Shared
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.Extensions.Localization
+@using Microsoft.AspNetCore.Components.Web
+@using Blazorise
+@using Blazorise.Components
+@using Blazorise.DataGrid
+@using Volo.Abp.BlazoriseUI
+@using Volo.Abp.BlazoriseUI.Components
+@using Volo.Abp.ObjectMapping
+@using Volo.Abp.AspNetCore.Components.Messages
+@using Volo.Abp.AspNetCore.Components.Web.Theming.Layout
+@using global::HQSOFT.eBiz.AccountPayable.Permissions
+@using Microsoft.AspNetCore.Components
+@using Volo.Abp.AspNetCore.Components.Web
+@using Volo.Abp.Http.Client
+@inherits AccountPayableComponentBase
+@inject IVendorClassAttributesAppService VendorClassAttributesAppService
+@inject IUiMessageService UiMessageService
+@inject IRemoteServiceConfigurationProvider RemoteServiceConfigurationProvider
+@inject NavigationManager NavigationManager
+
+@* ************************* PAGE HEADER ************************* *@
+<PageHeader Title="@L["VendorClassAttributes"]" BreadcrumbItems="BreadcrumbItems" Toolbar="Toolbar">
+
+</PageHeader>
+
+@* ************************* SEARCH ************************* *@
+<Card>
+    <CardBody>
+        <Form id="VendorClassAttributeSearchForm" class="mb-3">
+            <Addons>
+                <Addon AddonType="AddonType.Body">
+                    <TextEdit @bind-Text="@Filter.FilterText"
+                              Autofocus="true"
+                              Placeholder="@L["Search"]">
+                    </TextEdit>
+                </Addon>
+                <Addon AddonType="AddonType.End">
+                    <SubmitButton Form="VendorClassAttributeSearchForm" Clicked="GetVendorClassAttributesAsync">
+                        <Icon Name="IconName.Search" Class="me-1"></Icon>@L["Search"]
+                    </SubmitButton>
+                </Addon>
+            </Addons>
+        </Form>
+    </CardBody>
+</Card>
+
+@* ************************* DATA GRID ************************* *@
+<Card>
+    <CardBody>
+        <DataGrid TItem="VendorClassAttributeWithNavigationPropertiesDto"
+                  Data="VendorClassAttributeList"
+                  ReadData="OnDataGridReadAsync"
+                  TotalItems="TotalCount"
+                  ShowPager="true"
+                  Responsive="true"
+                  PageSize="PageSize">
+            <DataGridColumns>
+                <DataGridEntityActionsColumn TItem="VendorClassAttributeWithNavigationPropertiesDto" @ref="@EntityActionsColumn">
+                    <DisplayTemplate>
+                        <EntityActions TItem="VendorClassAttributeWithNavigationPropertiesDto" EntityActionsColumn="@EntityActionsColumn">
+                            <EntityAction TItem="VendorClassAttributeWithNavigationPropertiesDto"
+                                          Visible="@CanEditVendorClassAttribute"
+                                          Clicked="async () => await OpenEditVendorClassAttributeModalAsync(context)"
+                                          Text="@L["Edit"]"></EntityAction>
+                            <EntityAction TItem="VendorClassAttributeWithNavigationPropertiesDto"
+                                          Visible="@CanDeleteVendorClassAttribute"
+                                          Clicked="() => DeleteVendorClassAttributeAsync(context)"
+                                          ConfirmationMessage="@(()=> L["DeleteConfirmationMessage"])"
+                                          Text="@L["Delete"]"></EntityAction>
+                        </EntityActions>
+                    </DisplayTemplate>
+                </DataGridEntityActionsColumn>
+               
+              <DataGridColumn TItem="VendorClassAttributeWithNavigationPropertiesDto"
+                      Field="VendorClassAttribute.IsActive"
+                      Caption="@L["IsActive"]">
+                    <DisplayTemplate>
+                        @if (context.VendorClassAttribute.IsActive)
+                        {
+                            <Icon TextColor="TextColor.Success" Name="@IconName.Check" />
+                        }
+                        else
+                        {
+                            <Icon TextColor="TextColor.Danger" Name="@IconName.Times" />
+                        }
+                    </DisplayTemplate>
+              </DataGridColumn>
+
+
+              <DataGridColumn TItem="VendorClassAttributeWithNavigationPropertiesDto"
+                      Field="VendorClassAttribute.IdAttribute"
+                      Caption="@L["IdAttribute"]">
+              </DataGridColumn>
+
+              <DataGridColumn TItem="VendorClassAttributeWithNavigationPropertiesDto"
+                      Field="VendorClassAttribute.SortOrder"
+                      Caption="@L["SortOrder"]">
+              </DataGridColumn>
+
+              <DataGridColumn TItem="VendorClassAttributeWithNavigationPropertiesDto"
+                      Field="VendorClassAttribute.IsRequired"
+                      Caption="@L["IsRequired"]">
+                    <DisplayTemplate>
+                        @if (context.VendorClassAttribute.IsRequired)
+                        {
+                            <Icon TextColor="TextColor.Success" Name="@IconName.Check" />
+                        }
+                        else
+                        {
+                            <Icon TextColor="TextColor.Danger" Name="@IconName.Times" />
+                        }
+                    </DisplayTemplate>
+              </DataGridColumn>
+
+
+              <DataGridColumn TItem="VendorClassAttributeWithNavigationPropertiesDto"
+                      Field="VendorClassAttribute.IsInternal"
+                      Caption="@L["IsInternal"]">
+                    <DisplayTemplate>
+                        @if (context.VendorClassAttribute.IsInternal)
+                        {
+                            <Icon TextColor="TextColor.Success" Name="@IconName.Check" />
+                        }
+                        else
+                        {
+                            <Icon TextColor="TextColor.Danger" Name="@IconName.Times" />
+                        }
+                    </DisplayTemplate>
+              </DataGridColumn>
+
+
+              <DataGridColumn TItem="VendorClassAttributeWithNavigationPropertiesDto"
+                      Field="VendorClassAttribute.ControlType"
+                      Caption="@L["ControlType"]">
+              </DataGridColumn>
+
+              <DataGridColumn TItem="VendorClassAttributeWithNavigationPropertiesDto"
+                      Field="VendorClassAttribute.DefaultValue"
+                      Caption="@L["DefaultValue"]">
+              </DataGridColumn>
+
+              <DataGridColumn TItem="VendorClassAttributeWithNavigationPropertiesDto"
+                      Field="VendorClassAttribute.Idx"
+                      Caption="@L["Idx"]">
+              </DataGridColumn>
+
+              <DataGridColumn TItem="VendorClassAttributeWithNavigationPropertiesDto"
+                      Field="VendorClass.VendorClassCode"
+                      Caption="@L["VendorClass"]">
+              </DataGridColumn>
+
+            </DataGridColumns>
+        </DataGrid>
+    </CardBody>
+</Card>
+
+@* ************************* CREATE MODAL ************************* *@
+<Modal @ref="CreateVendorClassAttributeModal" Closing="@CreateVendorClassAttributeModal.CancelClosingModalWhenFocusLost">
+    <ModalContent Centered="true">
+        <Form id="CreateVendorClassAttributeForm">
+            <ModalHeader>
+                <ModalTitle>@L["NewVendorClassAttribute"]</ModalTitle>
+                <CloseButton Clicked="CloseCreateVendorClassAttributeModalAsync" />
+            </ModalHeader>
+            <ModalBody>
+                <Validations @ref="@NewVendorClassAttributeValidations"
+                            Mode="ValidationMode.Auto"
+                            Model="@NewVendorClassAttribute"
+                            ValidateOnLoad="false">
+                     
+                    
+                    <Field>
+                        <Check TValue="bool" @bind-Checked="@NewVendorClassAttribute.IsActive" >@L["IsActive"]</Check>
+                    </Field>
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["IdAttribute"]</FieldLabel>
+                            <TextEdit @bind-Text="@NewVendorClassAttribute.IdAttribute"  >
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Field>
+                    </Validation>
+
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["SortOrder"]</FieldLabel>
+                            <NumericPicker TValue="int" @bind-Value="@NewVendorClassAttribute.SortOrder"  Decimals="0" >
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                             </NumericPicker>
+                        </Field>
+                     </Validation>
+
+
+                    <Field>
+                        <Check TValue="bool" @bind-Checked="@NewVendorClassAttribute.IsRequired" >@L["IsRequired"]</Check>
+                    </Field>
+
+                    <Field>
+                        <Check TValue="bool" @bind-Checked="@NewVendorClassAttribute.IsInternal" >@L["IsInternal"]</Check>
+                    </Field>
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["ControlType"]</FieldLabel>
+                            <TextEdit @bind-Text="@NewVendorClassAttribute.ControlType"  >
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Field>
+                    </Validation>
+
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["DefaultValue"]</FieldLabel>
+                            <TextEdit @bind-Text="@NewVendorClassAttribute.DefaultValue"  >
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Field>
+                    </Validation>
+
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["Idx"]</FieldLabel>
+                            <NumericPicker TValue="int" @bind-Value="@NewVendorClassAttribute.Idx"  Decimals="0" >
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                             </NumericPicker>
+                        </Field>
+                     </Validation>
+
+
+                    <Field>
+                        <FieldLabel>@L["VendorClass"]</FieldLabel>
+                        <Select TValue="Guid?" @bind-SelectedValue="@NewVendorClassAttribute.VendorClassId">
+                            <SelectItem TValue="Guid?" Value="null"></SelectItem>
+                            @foreach (var vendorClass in VendorClassesCollection)
+                            {
+                                <SelectItem TValue="Guid?" Value="@vendorClass.Id">
+                                    @vendorClass.DisplayName
+                                </SelectItem>
+                            }
+                        </Select>
+                    </Field>
+
+
+                    
+                    
+                </Validations>
+            </ModalBody>
+            <ModalFooter>
+                <Button Color="Color.Secondary"
+                        Clicked="CloseCreateVendorClassAttributeModalAsync">
+                    @L["Cancel"]
+                </Button>
+                <SubmitButton Form="CreateVendorClassAttributeForm" Clicked="CreateVendorClassAttributeAsync" />
+            </ModalFooter>
+        </Form>
+    </ModalContent>
+</Modal>
+
+@* ************************* EDIT MODAL ************************* *@
+<Modal @ref="EditVendorClassAttributeModal" Closing="@EditVendorClassAttributeModal.CancelClosingModalWhenFocusLost">
+    <ModalContent Centered="true">
+        <Form id="EditVendorClassAttributeForm">
+            <ModalHeader>
+                <ModalTitle>@L["Update"]</ModalTitle>
+                <CloseButton Clicked="CloseEditVendorClassAttributeModalAsync" />
+            </ModalHeader>
+            <ModalBody>
+                <Validations @ref="@EditingVendorClassAttributeValidations"
+                            Mode="ValidationMode.Auto"
+                            Model="@EditingVendorClassAttribute"
+                            ValidateOnLoad="false">
+                     
+                    
+                    <Field>
+                        <Check TValue="bool" @bind-Checked="@EditingVendorClassAttribute.IsActive" >@L["IsActive"]</Check>
+                    </Field>
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["IdAttribute"]</FieldLabel>
+                            <TextEdit @bind-Text="@EditingVendorClassAttribute.IdAttribute"  >
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Field>
+                    </Validation>
+
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["SortOrder"]</FieldLabel>
+                            <NumericPicker TValue="int" @bind-Value="@EditingVendorClassAttribute.SortOrder"  Decimals="0" >
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                             </NumericPicker>
+                        </Field>
+                     </Validation>
+
+
+                    <Field>
+                        <Check TValue="bool" @bind-Checked="@EditingVendorClassAttribute.IsRequired" >@L["IsRequired"]</Check>
+                    </Field>
+
+                    <Field>
+                        <Check TValue="bool" @bind-Checked="@EditingVendorClassAttribute.IsInternal" >@L["IsInternal"]</Check>
+                    </Field>
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["ControlType"]</FieldLabel>
+                            <TextEdit @bind-Text="@EditingVendorClassAttribute.ControlType"  >
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Field>
+                    </Validation>
+
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["DefaultValue"]</FieldLabel>
+                            <TextEdit @bind-Text="@EditingVendorClassAttribute.DefaultValue"  >
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Field>
+                    </Validation>
+
+
+                    <Validation>
+                        <Field>
+                            <FieldLabel>@L["Idx"]</FieldLabel>
+                            <NumericPicker TValue="int" @bind-Value="@EditingVendorClassAttribute.Idx"  Decimals="0" >
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                             </NumericPicker>
+                        </Field>
+                     </Validation>
+
+
+                    <Field>
+                        <FieldLabel>@L["VendorClass"]</FieldLabel>
+                        <Select TValue="Guid?" @bind-SelectedValue="@EditingVendorClassAttribute.VendorClassId">
+                            <SelectItem TValue="Guid?" Value="null"></SelectItem>
+                            @foreach (var vendorClass in VendorClassesCollection)
+                            {
+                                <SelectItem TValue="Guid?" Value="@vendorClass.Id">
+                                    @vendorClass.DisplayName
+                                </SelectItem>
+                            }
+                        </Select>
+                    </Field>
+
+
+                    
+                    
+                </Validations>
+            </ModalBody>
+            <ModalFooter>
+                <Button Color="Color.Secondary"
+                        Clicked="CloseEditVendorClassAttributeModalAsync">
+                    @L["Cancel"]
+                </Button>
+                <SubmitButton Form="CreateVendorClassAttributeForm" Clicked="UpdateVendorClassAttributeAsync" />
+            </ModalFooter>
+        </Form>
+    </ModalContent>
+</Modal>
