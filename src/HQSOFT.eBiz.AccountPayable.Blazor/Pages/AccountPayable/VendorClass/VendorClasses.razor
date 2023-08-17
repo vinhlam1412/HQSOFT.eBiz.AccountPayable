@@ -1,0 +1,767 @@
+﻿@page "/AccountPayable/VendorClasses/{Id}"
+@using DevExpress.Blazor
+@using HQSOFT.SharedInformation.Attributes;
+@using HQSOFT.SharedInformation.Companies;
+@using HQSOFT.SharedInformation.Countries;
+@using HQSOFT.eBiz.AccountPayable.VendorClassAttributes;
+@using HQSOFT.eBiz.AccountPayable.VendorClasses;
+@using HQSOFT.eBiz.AccountPayable.VendorClassCompanies;
+@using HQSOFT.eBiz.GeneralLedger.Accounts;
+@using HQSOFT.eBiz.GeneralLedger.CostCenters;
+@using HQSOFT.eBiz.GeneralLedger.Currencies;
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Volo.Abp.AspNetCore.Components.Messages;
+@using Volo.Abp.AspNetCore.Components.Web.Theming.Layout
+@using Volo.Abp.Http.Client;
+@using Microsoft.JSInterop
+
+@inject IJSRuntime JSRuntime
+@inherits AccountPayableComponentBase
+@inject IVendorClassesAppService VendorClassesAppService
+@inject IVendorClassAttributesAppService VendorClassAttributesAppService
+@inject ICountriesAppService CountriesAppService
+@inject ICompaniesAppService CompaniesAppService
+@inject IAccountsAppService AccountsAppService
+@inject ICostCentersAppService CostCentersAppService
+@inject ICurrenciesAppService CurrenciesAppService
+@inject IAttributesAppService AttributesAppService
+@inject IVendorClassCompaniesAppService VendorClassCompaniesAppService
+@inject IUiMessageService UiMessageService
+@inject IRemoteServiceConfigurationProvider RemoteServiceConfigurationProvider
+@inject NavigationManager NavigationManager
+
+<PageHeader Title="@(L["VendorClasses"] + (IsDataEntryChanged? " (*)":"" ))" BreadcrumbItems="BreadcrumbItems" Toolbar="Toolbar">
+    <p></p>
+</PageHeader>   
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+<Card>
+    <CardBody>
+        <Row>
+            <EditForm @ref="EditFormMain"
+                      Model="@EditingVendorClass"
+                      Context="EditFormContext">
+                <DataAnnotationsValidator />
+                 <DxFormLayout CaptionPosition="CaptionPosition.Horizontal" CssClass="w-100">
+                    <DxFormLayoutItem Caption="@(L["VendorClassCode"] + " *")" ColSpanLg="4" ColSpanMd="12" BeginRow="true">
+                        <DxTextBox Text="@EditingVendorClass.VendorClassCode"
+                                   TextExpression="@(() => EditingVendorClass.VendorClassCode)"
+                                   TextChanged="@((newValue) => {
+                                                                IsDataEntryChanged = true;
+                                                                EditingVendorClass.VendorClassCode = newValue;
+
+                                            })"
+                                   BindValueMode="BindValueMode.OnLostFocus"
+                                   InputCssClass="focus-value"
+                                   ShowValidationIcon="true" />
+
+                        <ValidationMessage For="@(() => EditingVendorClass.VendorClassCode)" />
+                    </DxFormLayoutItem>
+
+                    <DxFormLayoutItem Caption="@(L["Description"])" ColSpanLg="4" ColSpanMd="12" BeginRow="true">
+                        <DxTextBox Text="@EditingVendorClass.Description"
+                                   TextExpression="@(() => EditingVendorClass.Description)"
+                                   TextChanged="@((newValue) => {
+                                                                IsDataEntryChanged = true;
+                                                                EditingVendorClass.Description = newValue;
+
+                                            })"
+                                   BindValueMode="BindValueMode.OnLostFocus"
+                                   InputCssClass="focus-value"
+                                   ShowValidationIcon="true" />
+
+                        <ValidationMessage For="@(() => EditingVendorClass.Description)" />
+                    </DxFormLayoutItem>
+
+                    <DxFormLayoutTabPages>
+                        <DxFormLayoutTabPage Caption="GENERAL">
+                            <DxFormLayoutItem Caption="@(L["Country"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@CountriesCollection"
+                                            @bind-Value="@EditingVendorClass.Country"
+                                            TextFieldName="Description"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((CountryDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true" />
+                                <ValidationMessage For="@(() => EditingVendorClass.Country)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["Receipt Action"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxTextBox Text="@EditingVendorClass.ReceiptAction"
+                                           TextExpression="@(() => EditingVendorClass.ReceiptAction)"
+                                           TextChanged="@((newValue) => {
+                                                                IsDataEntryChanged = true;
+                                                                EditingVendorClass.ReceiptAction = newValue;
+
+                                            })"
+                                           BindValueMode="BindValueMode.OnLostFocus"
+                                           InputCssClass="focus-value"
+                                           ShowValidationIcon="true"/>
+
+                                <ValidationMessage For="@(() => EditingVendorClass.ReceiptAction)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["Terms"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@CountriesCollection"
+                                            @bind-Value="@EditingVendorClass.TermId"
+                                            TextFieldName="PaymentMethodCode"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((CountryDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true" />
+                                <ValidationMessage For="@(()=>EditingVendorClass.TermId)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["Payment Method"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@CountriesCollection"
+                                            @bind-Value="@EditingVendorClass.PaymentMethodCode"
+                                            TextFieldName="PaymentMethodCode"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((CountryDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true" />
+                                <ValidationMessage For="@(() => EditingVendorClass.PaymentMethodCode)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["Cash Account"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@AccountsCollection"
+                                            @bind-Value="@EditingVendorClass.CashAccount"
+                                            TextFieldName="AccountName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((AccountDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true" >
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="AccountNumber"
+                                                            Caption="@L["AccountNumber"]" />
+                                        <DxListEditorColumn FieldName="AccountName"
+                                                            Caption="@L["AccountName"]" />
+                                    </Columns>
+                                </DxComboBox>
+
+                                <ValidationMessage For="@(() => EditingVendorClass.CashAccount)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["Current Code"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@CurrenciesCollection"
+                                            @bind-Value="@EditingVendorClass.Currency"
+                                            TextFieldName="CurrencyCode"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((CurrencyDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true" />
+                                <ValidationMessage For="@(() => EditingVendorClass.Currency)" />
+                            </DxFormLayoutItem>
+                        </DxFormLayoutTabPage>
+
+                         <DxFormLayoutTabPage Caption="GL ACCOUNTS">
+                            <DxFormLayoutItem Caption="@(L["AP Account"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@AccountsCollection"
+                                            @bind-Value="@EditingVendorClass.APAccount"
+                                            TextFieldName="AccountName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((AccountDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="AccountNumber"
+                                                            Caption="@L["AccountNumber"]" />
+                                        <DxListEditorColumn FieldName="AccountName"
+                                                            Caption="@L["AccountName"]" />
+                                    </Columns>
+                                </DxComboBox>
+                                <ValidationMessage For="@(() => EditingVendorClass.APAccount)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["AP CostCenter"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@CostCentersCollection"
+                                            @bind-Value="@EditingVendorClass.APCostCenter"
+                                            TextFieldName="CostCenterName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((CostCenterDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="CostCenterNumber"
+                                                            Caption="@L["CostCenterNumber"]" />
+                                        <DxListEditorColumn FieldName="CostCenterName"
+                                                            Caption="@L["CostCenterName"]" />
+                                    </Columns>
+                                </DxComboBox>
+                                <ValidationMessage For="@(() => EditingVendorClass.APCostCenter)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["Expense Account"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@AccountsCollection"
+                                            @bind-Value="@EditingVendorClass.ExpeneseAccount"
+                                            TextFieldName="AccountName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((AccountDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="AccountNumber"
+                                                            Caption="@L["AccountNumber"]" />
+                                        <DxListEditorColumn FieldName="AccountName"
+                                                            Caption="@L["AccountName"]" />
+                                    </Columns>
+                                </DxComboBox>
+                                <ValidationMessage For="@(() => EditingVendorClass.ExpeneseAccount)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["Expense CostCenter"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@CostCentersCollection"
+                                            @bind-Value="@EditingVendorClass.ExpeneseCostCenter"
+                                            TextFieldName="CostCenterName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((CostCenterDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="CostCenterNumber"
+                                                            Caption="@L["CostCenterNumber"]" />
+                                        <DxListEditorColumn FieldName="CostCenterName"
+                                                            Caption="@L["CostCenterName"]" />
+                                    </Columns>
+                                </DxComboBox>
+                                <ValidationMessage For="@(() => EditingVendorClass.ExpeneseCostCenter)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["Discount Account"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@AccountsCollection"
+                                            @bind-Value="@EditingVendorClass.DiscountAccount"
+                                            TextFieldName="AccountName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((AccountDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="AccountNumber"
+                                                            Caption="@L["AccountNumber"]" />
+                                        <DxListEditorColumn FieldName="AccountName"
+                                                            Caption="@L["AccountName"]" />
+                                    </Columns>
+                                </DxComboBox>
+                                <ValidationMessage For="@(() => EditingVendorClass.DiscountAccount)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["Discount CostCenter"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@CostCentersCollection"
+                                            @bind-Value="@EditingVendorClass.DiscountCostCenter"
+                                            TextFieldName="CostCenterName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((CostCenterDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="CostCenterNumber"
+                                                            Caption="@L["CostCenterNumber"]" />
+                                        <DxListEditorColumn FieldName="CostCenterName"
+                                                            Caption="@L["CostCenterName"]" />
+                                    </Columns>
+                                </DxComboBox>
+                                <ValidationMessage For="@(() => EditingVendorClass.Country)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["Cash Discount Account"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@AccountsCollection"
+                                            @bind-Value="@EditingVendorClass.CashDiscountAccount"
+                                            TextFieldName="AccountName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((AccountDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="AccountNumber"
+                                                            Caption="@L["AccountNumber"]" />
+                                        <DxListEditorColumn FieldName="AccountName"
+                                                            Caption="@L["AccountName"]" />
+                                    </Columns>
+                                </DxComboBox>
+                                <ValidationMessage For="@(() => EditingVendorClass.CashDiscountAccount)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["Cash Discount CostCenter"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@CostCentersCollection"
+                                            @bind-Value="@EditingVendorClass.CashDiscountCostCenter"
+                                            TextFieldName="CostCenterName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((CostCenterDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="CostCenterNumber"
+                                                            Caption="@L["CostCenterNumber"]" />
+                                        <DxListEditorColumn FieldName="CostCenterName"
+                                                            Caption="@L["CostCenterName"]" />
+                                    </Columns>
+                                </DxComboBox>
+                                <ValidationMessage For="@(() => EditingVendorClass.CashDiscountCostCenter)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["Prepayment Account"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@AccountsCollection"
+                                            @bind-Value="@EditingVendorClass.PrepaymentAccount"
+                                            TextFieldName="AccountName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((AccountDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="AccountNumber"
+                                                            Caption="@L["AccountNumber"]" />
+                                        <DxListEditorColumn FieldName="AccountName"
+                                                            Caption="@L["AccountName"]" />
+                                    </Columns>
+                                </DxComboBox>
+                                <ValidationMessage For="@(() => EditingVendorClass.PrepaymentAccount)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["Prepayment CostCenter"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@CostCentersCollection"
+                                            @bind-Value="@EditingVendorClass.PrepaymentCostCenter"
+                                            TextFieldName="CostCenterName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((CostCenterDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="CostCenterNumber"
+                                                            Caption="@L["CostCenterNumber"]" />
+                                        <DxListEditorColumn FieldName="CostCenterName"
+                                                            Caption="@L["CostCenterName"]" />
+                                    </Columns>
+                                </DxComboBox>
+                                <ValidationMessage For="@(() => EditingVendorClass.PrepaymentCostCenter)" />
+                            </DxFormLayoutItem>
+
+
+                            <DxFormLayoutItem Caption="@(L["Reclassification Account"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@AccountsCollection"
+                                            @bind-Value="@EditingVendorClass.ReclassificationAccount"
+                                            TextFieldName="AccountName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((AccountDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="AccountNumber"
+                                                            Caption="@L["AccountNumber"]" />
+                                        <DxListEditorColumn FieldName="AccountName"
+                                                            Caption="@L["AccountName"]" />
+                                    </Columns>
+                                </DxComboBox>
+                                <ValidationMessage For="@(() => EditingVendorClass.ReclassificationAccount)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["Reclassification CostCenter"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@CostCentersCollection"
+                                            @bind-Value="@EditingVendorClass.ReclassificationCostCenter"
+                                            TextFieldName="CostCenterName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((CostCenterDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="CostCenterNumber"
+                                                            Caption="@L["CostCenterNumber"]" />
+                                        <DxListEditorColumn FieldName="CostCenterName"
+                                                            Caption="@L["CostCenterName"]" />
+                                    </Columns>
+                                </DxComboBox>
+                                <ValidationMessage For="@(() => EditingVendorClass.ReclassificationCostCenter)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["PO Accrual Account"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@AccountsCollection"
+                                            @bind-Value="@EditingVendorClass.POAccrualAccount"
+                                            TextFieldName="AccountName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((AccountDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="AccountNumber"
+                                                            Caption="@L["AccountNumber"]" />
+                                        <DxListEditorColumn FieldName="AccountName"
+                                                            Caption="@L["AccountName"]" />
+                                    </Columns>
+                                </DxComboBox>
+                                <ValidationMessage For="@(() => EditingVendorClass.POAccrualAccount)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["PO Accrual CostCenter"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@CostCentersCollection"
+                                            @bind-Value="@EditingVendorClass.POAccrualCostCenter"
+                                            TextFieldName="CostCenterName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((CostCenterDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="CostCenterNumber"
+                                                            Caption="@L["CostCenterNumber"]" />
+                                        <DxListEditorColumn FieldName="CostCenterName"
+                                                            Caption="@L["CostCenterName"]" />
+                                    </Columns>
+                                </DxComboBox>
+                                <ValidationMessage For="@(() => EditingVendorClass.POAccrualCostCenter)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["Unrealized Gain Account"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@AccountsCollection"
+                                            @bind-Value="@EditingVendorClass.UnrealizedGaintAccount"
+                                            TextFieldName="AccountName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((AccountDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="AccountNumber"
+                                                            Caption="@L["AccountNumber"]" />
+                                        <DxListEditorColumn FieldName="AccountName"
+                                                            Caption="@L["AccountName"]" />
+                                    </Columns>
+                                </DxComboBox>
+                                <ValidationMessage For="@(() => EditingVendorClass.UnrealizedGaintAccount)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["Unrealized Gain CostCenter"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@CostCentersCollection"
+                                            @bind-Value="@EditingVendorClass.UnrealizedGaintCostCenter"
+                                            TextFieldName="CostCenterName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((CostCenterDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="CostCenterNumber"
+                                                            Caption="@L["CostCenterNumber"]" />
+                                        <DxListEditorColumn FieldName="CostCenterName"
+                                                            Caption="@L["CostCenterName"]" />
+                                    </Columns>
+                                </DxComboBox>
+                                <ValidationMessage For="@(() => EditingVendorClass.UnrealizedGaintCostCenter)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["Unrealized Loss Account"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@AccountsCollection"
+                                            @bind-Value="@EditingVendorClass.UnrealizedGaintLossAccount"
+                                            TextFieldName="AccountName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((AccountDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="AccountNumber"
+                                                            Caption="@L["AccountNumber"]" />
+                                        <DxListEditorColumn FieldName="AccountName"
+                                                            Caption="@L["AccountName"]" />
+                                    </Columns>
+                                </DxComboBox>
+                                <ValidationMessage For="@(() => EditingVendorClass.UnrealizedGaintLossAccount)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["Unrealized Loss CostCenter"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@CostCentersCollection"
+                                            @bind-Value="@EditingVendorClass.UnrealizedGaintCostCenter"
+                                            TextFieldName="CostCenterName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((CostCenterDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="CostCenterNumber"
+                                                            Caption="@L["CostCenterNumber"]" />
+                                        <DxListEditorColumn FieldName="CostCenterName"
+                                                            Caption="@L["CostCenterName"]" />
+                                    </Columns>
+                                        </DxComboBox>
+                                <ValidationMessage For="@(() => EditingVendorClass.UnrealizedGaintCostCenter)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["Retainage Payable Account"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@AccountsCollection"
+                                            @bind-Value="@EditingVendorClass.RetainagePayableAccount"
+                                            TextFieldName="AccountName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((AccountDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="AccountNumber"
+                                                            Caption="@L["AccountNumber"]" />
+                                        <DxListEditorColumn FieldName="AccountName"
+                                                            Caption="@L["AccountName"]" />
+                                    </Columns>
+                                </DxComboBox>
+                                <ValidationMessage For="@(() => EditingVendorClass.RetainagePayableAccount)" />
+                            </DxFormLayoutItem>
+
+                            <DxFormLayoutItem Caption="@(L["Retainage Payable CostCenter"])" ColSpanLg="6" ColSpanMd="12">
+                                <DxComboBox Data="@CostCentersCollection"
+                                            @bind-Value="@EditingVendorClass.RetainagePayableCostCenter"
+                                            TextFieldName="CostCenterName"
+                                            ValueFieldName="Id"
+                                            FilteringMode="DataGridFilteringMode.Contains"
+                                            DisplayFormat="{1}"
+                                            EditFormat="{0}"
+                                            SelectedItemChanged="@((CostCenterDto e) => IsDataEntryChanged = true)"
+                                            InputCssClass="focus-value"
+                                            ShowValidationIcon="true">
+                                    <Columns>
+                                        <DxListEditorColumn FieldName="CostCenterNumber"
+                                                            Caption="@L["CostCenterNumber"]" />
+                                        <DxListEditorColumn FieldName="CostCenterName"
+                                                            Caption="@L["CostCenterName"]" />
+                                    </Columns>
+                                </DxComboBox>
+                                <ValidationMessage For="@(() => EditingVendorClass.RetainagePayableCostCenter)" />
+                            </DxFormLayoutItem>
+                         </DxFormLayoutTabPage>
+
+                        @* ************************* ATTRIBUTES ************************* *@
+                        <DxFormLayoutTabPage Caption="ATTRIBUTES">
+                            <Card>
+                                <CardBody>
+                                    @* ************************* DEVEXPRESS DATA GRID ************************* *@
+                                    <DxGrid @ref="VendorClassAttributeGrid"
+                                            Data="@VendorClassAttributes"
+                                            @bind-SelectedDataItems="@selectedVendorClassAttributes"
+                                            SelectionMode="GridSelectionMode.Multiple"
+                                            AllowSelectRowByClick="true"
+                                            EditMode="GridEditMode.EditRow"
+                                            EditNewRowPosition="GridEditNewRowPosition.Bottom"
+                                            PageSize="@PageSize"
+                                            PagerPosition="GridPagerPosition.Bottom"
+                                            PageSizeSelectorVisible="true"
+                                            PageSizeSelectorItems="@(new int[] { 10, 20, 100, 500 })"
+                                            PageSizeSelectorAllRowsItemVisible="true"
+                                            PagerSwitchToInputBoxButtonCount="@PageSize"
+                                            PagerVisibleNumericButtonCount="@PageSize"
+                                            PagerNavigationMode="PagerNavigationMode.InputBox"
+                                            RowDoubleClick="VendorClassAttributes_OnRowDoubleClick"
+                                            FocusedRowEnabled="true"
+                                            CustomizeEditModel="VendorClassAttributes_OnCustomizeEditModel"
+                                            EditModelSaving="VendorClassAttributes_EditModelSaving"
+                                            DataItemDeleting="VendorClassAttributes_DataItemDeleting"
+                                            EditorRenderMode="GridEditorRenderMode.Integrated"
+                                            KeyboardNavigationEnabled="true"
+                                            @onkeydown="GridVendorClassAttributeDetail_OnKeyDown">
+                                        <Columns>
+                                            <DxGridSelectionColumn />
+                                            <DxGridDataColumn FieldName="@nameof(VendorClassAttributeDto.IsActive)" Width="30%" Caption="@L["Active"]" />
+
+                                            <DxGridDataColumn Name="IdAttribute" FieldName="IdAttribute" Caption="@L["AttributeId"]">
+                                                <EditSettings>
+                                                    <DxComboBoxSettings Data="AttributesCollection"
+                                                                        ValueFieldName="Id"
+                                                                        TextFieldName="AttributeCode"
+                                                                        FilteringMode="DataGridFilteringMode.Contains"
+                                                                        InputCssClass="focus-value">
+                                                    </DxComboBoxSettings>
+                                                </EditSettings>
+                                            </DxGridDataColumn>
+
+                                            <DxGridDataColumn FieldName="@nameof(VendorClassAttributeDto.SortOrder)" Width="30%" Caption="@L["SortOrder"]" />
+                                            <DxGridDataColumn Name="IsRequired" FieldName="IsRequired" Caption="@L["Required"]">
+                                                <CellEditTemplate>
+                                                    @{
+                                                        GridVendorClassCompanyEditContext = context.EditContext;
+                                                    }
+                                                    <CascadingValue Name="FocusOnEditStart" Value="context.DataColumn.Name == FocusedColumn">
+                                                        <DxCheckBox @bind-Checked="((VendorClassAttributeDto)context.EditModel).IsRequired" />
+                                                    </CascadingValue>
+                                                </CellEditTemplate>
+                                            </DxGridDataColumn>
+
+                                              <DxGridDataColumn Name="IsInternal" FieldName="IsInternal" Caption="@L["Internal"]">
+                                                <CellEditTemplate>
+                                                    @{
+                                                        GridVendorClassCompanyEditContext = context.EditContext;
+                                                    }
+                                                    <CascadingValue Name="FocusOnEditStart" Value="context.DataColumn.Name == FocusedColumn">
+                                                        <DxCheckBox @bind-Checked="((VendorClassAttributeDto)context.EditModel).IsInternal" />
+                                                    </CascadingValue>
+                                                </CellEditTemplate>
+                                            </DxGridDataColumn>
+
+                                             <DxGridDataColumn FieldName="@nameof(VendorClassAttributeDto.ControlType)" Width="30%" Caption="@L["ControlType"]">
+                                                 
+                                             </DxGridDataColumn>
+                                             
+
+                                            <DxGridDataColumn FieldName="@nameof(VendorClassAttributeDto.DefaultValue)" Width="30%" Caption="@L["DefaultValue"]">
+                                               @* <CellEditTemplate>
+                                                    <TextEdit>
+                                                    </TextEdit>
+                                                </CellEditTemplate>*@
+                                            </DxGridDataColumn>
+
+                                        </Columns>
+                                    </DxGrid>
+                                    <Div class="mt-1 bt-1">
+                                        <Button Color="Color.Primary" Clicked="BtnAdd_VendorClassAttributeGrid_OnClick" Size="Size.Small" Disabled="!CanCreateVendorClassAttribute || !CanEditVendorClassAttribute">
+                                            <i class="fa-plus fa"></i>
+                                        </Button>
+                                        <Button Color="Color.Secondary" Clicked="VendorClassAttributeGrid.CancelEditAsync" Size="Size.Small">
+                                            <i class="fa-undo fa"></i>
+                                        </Button>
+                                        <Button Color="Color.Danger" Clicked="BtnDelete_VendorClassAttributeGrid_OnClick" Size="Size.Small" Disabled="!CanEditVendorClassAttribute">
+                                            <i class="fa-trash fa"></i>
+                                        </Button>
+
+                                    </Div>
+                                </CardBody>
+                            </Card>
+                        </DxFormLayoutTabPage>
+
+
+                        @* ************************* COMPANIES ************************* *@
+                        <DxFormLayoutTabPage Caption="COMPANIES">
+                            <Card>
+                                <CardBody>
+                                    @* ************************* DEVEXPRESS DATA GRID ************************* *@
+                                    <DxGrid @ref="VendorClassCompanyGrid"
+                                            Data="@VendorClassCompanies"
+                                            @bind-SelectedDataItems="@selectedVendorClassCompanies"
+                                            SelectionMode="GridSelectionMode.Multiple"
+                                            AllowSelectRowByClick="true"
+                                            EditMode="GridEditMode.EditRow"
+                                            EditNewRowPosition="GridEditNewRowPosition.Bottom"
+                                            PageSize="@PageSize"
+                                            PagerPosition="GridPagerPosition.Bottom"
+                                            PageSizeSelectorVisible="true"
+                                            PageSizeSelectorItems="@(new int[] { 10, 20, 100, 500 })"
+                                            PageSizeSelectorAllRowsItemVisible="true"
+                                            PagerSwitchToInputBoxButtonCount="@PageSize"
+                                            PagerVisibleNumericButtonCount="@PageSize"
+                                            PagerNavigationMode="PagerNavigationMode.InputBox"
+                                            RowDoubleClick="VendorClassCompanies_OnRowDoubleClick"
+                                            FocusedRowEnabled="true"
+                                            CustomizeEditModel="VendorClassCompanies_OnCustomizeEditModel"
+                                            EditModelSaving="VendorClassCompanies_EditModelSaving"
+                                            DataItemDeleting="VendorClassCompanies_DataItemDeleting"
+                                            EditorRenderMode="GridEditorRenderMode.Integrated"
+                                            KeyboardNavigationEnabled="true"
+                                            @onkeydown="GridVendorClassCompanyDetail_OnKeyDown">
+                                            
+                                        <Columns>
+                                            <DxGridSelectionColumn />                      
+                                            <DxGridDataColumn Name="CompanyId" FieldName="CompanyId" Caption="@L["CompanyId"]">
+                                                <EditSettings>
+                                                    <DxComboBoxSettings Data="CompaniesCollection"
+                                                                        ValueFieldName="Id"
+                                                                        TextFieldName="CompanyName"
+                                                                       
+                                                                        FilteringMode="DataGridFilteringMode.Contains"
+                                                                        InputCssClass="focus-value"
+                                                                        >
+                                                    </DxComboBoxSettings>
+                                                </EditSettings>
+                                            </DxGridDataColumn>
+                                            
+                                            <DxGridDataColumn Name="Exclude" FieldName="Exclude" Caption="@L["Exclude"]">
+                                                <CellEditTemplate>
+                                                    @{
+                                                        GridVendorClassCompanyEditContext = context.EditContext;
+                                                    }
+                                                    <CascadingValue Name="FocusOnEditStart" Value="context.DataColumn.Name == FocusedColumn">
+                                                        <DxCheckBox @bind-Checked="((VendorClassCompanyDto)context.EditModel).Exclude" />
+                                                    </CascadingValue>
+                                                </CellEditTemplate>
+                                            </DxGridDataColumn>
+
+                                        </Columns>
+                                    </DxGrid>
+                                    <Div class="mt-1 bt-1">
+                                        <Button Color="Color.Primary" Clicked="BtnAdd_VendorClassCompanyGrid_OnClick" Size="Size.Small" Disabled="!CanCreateVendorClassCompany || !CanEditVendorClassCompany ">
+                                            <i class="fa-plus fa"></i>
+                                        </Button>
+                                        <Button Color="Color.Secondary" Clicked="VendorClassCompanyGrid.CancelEditAsync" Size="Size.Small">
+                                            <i class="fa-undo fa"></i>
+                                        </Button>
+                                        <Button Color="Color.Danger" Clicked="BtnDelete_VendorClassCompanyGrid_OnClick" Size="Size.Small" disabled="!CanDeleteVendorClassCompany">
+                                            <i class="fa-trash fa"></i>
+                                        </Button>
+
+                                    </Div>
+                                </CardBody>
+                            </Card>
+                        </DxFormLayoutTabPage>
+
+                    </DxFormLayoutTabPages>
+                 </DxFormLayout>
+
+            </EditForm>
+        </Row>
+    </CardBody>
+</Card>

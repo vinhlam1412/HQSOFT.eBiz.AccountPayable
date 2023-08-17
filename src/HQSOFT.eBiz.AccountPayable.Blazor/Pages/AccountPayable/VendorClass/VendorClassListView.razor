@@ -1,0 +1,94 @@
+@page "/AccountPayable/VendorClasses"
+
+
+
+@attribute [Authorize(AccountPayablePermissions.VendorClasses.Default)]
+@using global::HQSOFT.eBiz.AccountPayable.VendorClasses
+@using global::HQSOFT.eBiz.AccountPayable.Localization
+@using global::HQSOFT.eBiz.AccountPayable.Shared
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.Extensions.Localization
+@using Microsoft.AspNetCore.Components.Web
+@using Blazorise
+@using Blazorise.Components
+@using Blazorise.DataGrid
+@using Volo.Abp.BlazoriseUI
+@using Volo.Abp.BlazoriseUI.Components
+@using Volo.Abp.ObjectMapping
+@using Volo.Abp.AspNetCore.Components.Messages
+@using Volo.Abp.AspNetCore.Components.Web.Theming.Layout
+@using global::HQSOFT.eBiz.AccountPayable.Permissions
+@using Microsoft.AspNetCore.Components
+@using Volo.Abp.AspNetCore.Components.Web
+@using Volo.Abp.Http.Client
+@inherits AccountPayableComponentBase
+@inject IVendorClassesAppService VendorClassesAppService
+@inject IUiMessageService UiMessageService
+@inject IRemoteServiceConfigurationProvider RemoteServiceConfigurationProvider
+@inject NavigationManager NavigationManager
+
+@* ************************* PAGE HEADER ************************* *@
+<PageHeader Title="@L["VendorClasses"]" BreadcrumbItems="BreadcrumbItems" Toolbar="Toolbar">
+
+</PageHeader>
+
+@* ************************* SEARCH ************************* *@
+<Card>
+    <CardBody>
+        <Form id="VendorClassSearchForm" class="mb-3">
+            <Addons>
+                <Addon AddonType="AddonType.Body">
+                    <TextEdit @bind-Text="@Filter.FilterText"
+                              Autofocus="true"
+                              Placeholder="@L["Search"]">
+                    </TextEdit>
+                </Addon>
+                <Addon AddonType="AddonType.End">
+                    <SubmitButton Form="VendorClassSearchForm" Clicked="GetVendorClassesAsync">
+                        <Icon Name="IconName.Search" Class="me-1"></Icon>@L["Search"]
+                    </SubmitButton>
+                </Addon>
+            </Addons>
+        </Form>
+    </CardBody>
+</Card>
+
+@* ************************* DATA GRID ************************* *@
+<Card>
+    <CardBody>
+        <DataGrid TItem="VendorClassDto"
+                  Data="VendorClassList"
+                  ReadData="OnDataGridReadAsync"
+                  TotalItems="TotalCount"
+                  ShowPager="true"
+                  Responsive="true"
+                  PageSize="PageSize"
+                  @bind-SelectedRows="SelectedVendorClasses"
+                  SelectionMode="DataGridSelectionMode.Multiple">
+            <DataGridColumns>       
+            <DataGridMultiSelectColumn TItem="VendorClassDto" Width="30px"></DataGridMultiSelectColumn>
+            <DataGridCommandColumn TItem="VendorClassDto" />
+              <DataGridColumn TItem="VendorClassDto"
+                      Field="VendorClassCode"
+                      Caption="@L["VendorClassCode"]">
+                    <DisplayTemplate>
+                        @{
+                            <a class="d-block text-left" href="javascript:;" @onclick="() => GoToEditPage(context)">@((context as VendorClassDto).VendorClassCode)</a>
+                        }
+                    </DisplayTemplate>
+              </DataGridColumn>
+
+              <DataGridColumn TItem="VendorClassDto"
+                      Field="Description"
+                      Caption="@L["Description"]">
+              </DataGridColumn>
+
+              <DataGridColumn TItem="VendorClassDto"
+                      Field="ReceiptAction"
+                      Caption="@L["ReceiptAction"]">
+              </DataGridColumn>
+
+            </DataGridColumns>
+        </DataGrid>
+    </CardBody>
+</Card>
